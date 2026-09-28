@@ -1,0 +1,125 @@
+{
+  "scope": "Focused implementation supplement; current source defaults, not a recovered historical run manifest.",
+  "offline_extraction": {
+    "builder_default_backend": "vllm",
+    "builder_default_model_family": "Qwen2.5-7B-Instruct",
+    "builder_default_served_model_name": "qwen2.5-7b-instruct-local",
+    "standalone_extractor_default_model": "gemini-2.5-flash",
+    "checkpoint_revision": null,
+    "historical_model_provenance": "Not verified from an archived run manifest in this release.",
+    "temperature": 0.2,
+    "max_output_tokens": 768,
+    "max_output_tokens_environment_override": "QASA_EXTRACTION_MAX_OUTPUT_TOKENS",
+    "extractor_max_attempts_including_initial_call": 5,
+    "initial_backoff_seconds": 2.0,
+    "backoff_multiplier": 2,
+    "document_workers_in_builder": 4,
+    "input_unit": "Document title followed by all distinct passages sharing that title.",
+    "document_template": "**{title}**\n{paragraphs_joined_by_newlines}",
+    "prompt_location": "extraction.py:EXTRACTION_PROMPT",
+    "schema_location": "extraction.py:ExtractionResult",
+    "normalization_location": "extraction.py:TripleExtractor._normalize_result",
+    "prompt_limits": {
+      "entities": 12,
+      "triples": 15,
+      "description_words": 20
+    },
+    "prompt_limits_enforcement": "Prompt instructions; not hard post-validation limits.",
+    "json_handling": {
+      "gemini": "JSON MIME type and Pydantic response schema are passed to the provider.",
+      "vllm_and_qwen_api": "JSON instructions plus local schema parsing; no strict response_format schema is sent.",
+      "local": "JSON instructions plus local schema parsing."
+    },
+    "backend_retries": {
+      "vllm": 1,
+      "gemini_default": 5,
+      "qwen_api_default": 5
+    },
+    "retry_count_scope": "The extractor loop has five attempts. Provider adapters or SDKs can retry within each attempt.",
+    "sampling_seed": null,
+    "local_huggingface_top_p_when_sampling": 0.9,
+    "provider_top_p": "Not explicitly set in the current adapter.",
+    "thinking": "Extraction does not set a Gemini thinking budget. QASA_DISABLE_THINKING can disable thinking for compatible Qwen/vLLM servers."
+  },
+  "retrieval_defaults": {
+    "bm25_k1": 1.5,
+    "bm25_b": 0.75,
+    "passage_candidates": 32,
+    "retained_passages": 8,
+    "passage_anchors": 12,
+    "max_hops": 4,
+    "paths_per_anchor": 10,
+    "relation_exact": 0.65,
+    "relation_prefix": 0.35,
+    "semantic_weight": 0.6,
+    "relation_weight": 0.25,
+    "structure_weight": 0.15,
+    "overlap_penalty": 0.12,
+    "greedy_source_cap": 3,
+    "final_paths": 8,
+    "temperature": 0.0,
+    "max_output_tokens": 80,
+    "candidate_order": "terminal_hit,any_hit,length,names;endpoint_dedup;budget",
+    "relation_hit": "nonempty normalized exact-token intersection",
+    "date_location_policy": "query_entity_coverage_then_unrestricted_greedy_fill"
+  },
+  "answer_generation": {
+    "temperature": 0.0,
+    "max_output_tokens": 80,
+    "parm_prompt_and_type_specific_postprocessing": "postprocessing.py:constrained_answer",
+    "qasa_answer_prompt": "postprocessing.py:ANSWER_PROMPT",
+    "metrics": "Maximum normalized exact match and token F1 over all reference answers, then mean over questions.",
+    "metric_implementation": "postprocessing.py:answer_f1"
+  },
+  "datasets": {
+    "2WikiMultihopQA": {
+      "repository": "xanhho/2WikiMultihopQA",
+      "split": "validation",
+      "selection": "Lexicographically sort original question IDs, then take sequential subsets.",
+      "subsets": {
+        "B0": [
+          0,
+          1000
+        ],
+        "B1": [
+          1000,
+          2000
+        ],
+        "B2": [
+          2000,
+          3000
+        ]
+      },
+      "range_semantics": "start inclusive, end exclusive",
+      "revision": null
+    },
+    "MuSiQue": {
+      "repository": "dgslibisey/MuSiQue",
+      "split": "validation",
+      "selection_in_manuscript": "First 1000 questions in original data order.",
+      "revision": null
+    },
+    "historical_question_id_lists_included": false,
+    "historical_question_id_status": "Not present in the supplied release source; question_ids.py exports IDs from an existing frozen manifest without resampling.",
+    "new_benchmark_run_performed_for_this_release": false
+  },
+  "availability": {
+    "included": [
+      "extraction code and complete prompt",
+      "model adapters",
+      "current configuration values",
+      "answer prompt and post-processing",
+      "metric implementation",
+      "question-ID selection and export utility"
+    ],
+    "not_included": [
+      "complete PARM retrieval pipeline",
+      "Neo4j graph construction/loading pipeline",
+      "archived run manifests",
+      "historical question-ID lists",
+      "frozen graphs",
+      "model checkpoints",
+      "benchmark results"
+    ]
+  }
+}
