@@ -60,10 +60,10 @@ def _extract_json_blob(text: str) -> str:
 
 class _LocalLLM:
     def __init__(self) -> None:
-        self.model_id = os.getenv("QASA_LLM_MODEL", "Qwen/Qwen2.5-7B-Instruct")
-        self.max_new_tokens = int(os.getenv("QASA_LLM_MAX_NEW_TOKENS", "512"))
-        self.device_map = os.getenv("QASA_LLM_DEVICE_MAP", "auto")
-        self.dtype = os.getenv("QASA_LLM_DTYPE", "bfloat16")
+        self.model_id = os.getenv("PARM_LLM_MODEL", "Qwen/Qwen2.5-7B-Instruct")
+        self.max_new_tokens = int(os.getenv("PARM_LLM_MAX_NEW_TOKENS", "512"))
+        self.device_map = os.getenv("PARM_LLM_DEVICE_MAP", "auto")
+        self.dtype = os.getenv("PARM_LLM_DTYPE", "bfloat16")
         self._lock = threading.Lock()
         self._tokenizer = None
         self._model = None
@@ -179,8 +179,8 @@ class _LocalLLM:
         import torch
         from transformers import AutoModel, AutoTokenizer
 
-        self._embed_model_id = os.getenv("QASA_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
-        self._embed_device = os.getenv("QASA_EMBEDDING_DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
+        self._embed_model_id = os.getenv("PARM_EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
+        self._embed_device = os.getenv("PARM_EMBEDDING_DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
         self._embed_tokenizer = AutoTokenizer.from_pretrained(self._embed_model_id, trust_remote_code=True)
         self._embed_model = AutoModel.from_pretrained(
             self._embed_model_id,
@@ -198,7 +198,7 @@ class _LocalLLM:
             text,
             padding=True,
             truncation=True,
-            max_length=int(os.getenv("QASA_EMBEDDING_MAX_LENGTH", "512")),
+            max_length=int(os.getenv("PARM_EMBEDDING_MAX_LENGTH", "512")),
             return_tensors="pt",
         )
         inputs = {k: v.to(self._embed_device) for k, v in inputs.items()}
@@ -229,11 +229,11 @@ class _LocalClient:
 
 class _VLLMModels:
     def __init__(self) -> None:
-        self.base_url = os.getenv("QASA_VLLM_BASE_URL", "http://127.0.0.1:8000/v1")
-        self.api_key = os.getenv("QASA_VLLM_API_KEY", "local")
+        self.base_url = os.getenv("PARM_VLLM_BASE_URL", "http://127.0.0.1:8000/v1")
+        self.api_key = os.getenv("PARM_VLLM_API_KEY", "local")
         self.model = os.getenv(
-            "QASA_VLLM_MODEL",
-            os.getenv("QASA_LLM_MODEL", "qwen2.5-7b-instruct-local"),
+            "PARM_VLLM_MODEL",
+            os.getenv("PARM_LLM_MODEL", "qwen2.5-7b-instruct-local"),
         )
         self.max_retries = 1
         self.base_delay = 0.0
@@ -253,7 +253,7 @@ class _VLLMModels:
                 "content": "Return only valid JSON matching the requested schema. Do not include markdown or explanations.",
             })
         request_kwargs = {}
-        if os.getenv("QASA_DISABLE_THINKING", "").strip().lower() in {"1", "true", "yes"}:
+        if os.getenv("PARM_DISABLE_THINKING", "").strip().lower() in {"1", "true", "yes"}:
             request_kwargs["extra_body"] = {
                 "chat_template_kwargs": {"enable_thinking": False}
             }
@@ -328,19 +328,19 @@ class _QwenAPIModels(_VLLMModels):
         if OpenAI is None:
             raise RuntimeError("openai package is required for the Qwen API backend")
         self.base_url = (
-            os.getenv("QASA_QWEN_BASE_URL")
+            os.getenv("PARM_QWEN_BASE_URL")
             or os.getenv("DASHSCOPE_BASE_URL")
             or "https://dashscope.aliyuncs.com/compatible-mode/v1"
         )
-        self.api_key = os.getenv("QASA_QWEN_API_KEY") or os.getenv("DASHSCOPE_API_KEY")
+        self.api_key = os.getenv("PARM_QWEN_API_KEY") or os.getenv("DASHSCOPE_API_KEY")
         if not self.api_key:
             raise RuntimeError(
-                "Set QASA_QWEN_API_KEY (or DASHSCOPE_API_KEY) before using QASA_BACKEND=qwen_api"
+                "Set PARM_QWEN_API_KEY (or DASHSCOPE_API_KEY) before using PARM_BACKEND=qwen_api"
             )
-        self.model = os.getenv("QASA_QWEN_MODEL", "qwen-plus")
-        self.max_retries = int(os.getenv("QASA_QWEN_MAX_RETRIES", "5"))
-        self.base_delay = float(os.getenv("QASA_QWEN_RETRY_BASE_DELAY", "2"))
-        timeout = float(os.getenv("QASA_QWEN_TIMEOUT", "120"))
+        self.model = os.getenv("PARM_QWEN_MODEL", "qwen-plus")
+        self.max_retries = int(os.getenv("PARM_QWEN_MAX_RETRIES", "5"))
+        self.base_delay = float(os.getenv("PARM_QWEN_RETRY_BASE_DELAY", "2"))
+        timeout = float(os.getenv("PARM_QWEN_TIMEOUT", "120"))
         self._client = OpenAI(base_url=self.base_url, api_key=self.api_key, timeout=timeout)
         self._embedding_fallback = _LocalLLM()
 
@@ -355,17 +355,17 @@ class _GeminiModels:
         if genai is None:
             raise RuntimeError("google-genai is required for the Gemini backend")
         api_key = (
-            os.getenv("QASA_GEMINI_API_KEY")
+            os.getenv("PARM_GEMINI_API_KEY")
             or os.getenv("GEMINI_API_KEY")
             or os.getenv("GOOGLE_API_KEY")
         )
         if not api_key:
             raise RuntimeError(
-                "Set QASA_GEMINI_API_KEY (or GEMINI_API_KEY) before using QASA_BACKEND=gemini"
+                "Set PARM_GEMINI_API_KEY (or GEMINI_API_KEY) before using PARM_BACKEND=gemini"
             )
-        self.model = os.getenv("QASA_GEMINI_MODEL", "gemini-2.5-flash")
-        self.max_retries = int(os.getenv("QASA_GEMINI_MAX_RETRIES", "5"))
-        self.base_delay = float(os.getenv("QASA_GEMINI_RETRY_BASE_DELAY", "2"))
+        self.model = os.getenv("PARM_GEMINI_MODEL", "gemini-2.5-flash")
+        self.max_retries = int(os.getenv("PARM_GEMINI_MAX_RETRIES", "5"))
+        self.base_delay = float(os.getenv("PARM_GEMINI_RETRY_BASE_DELAY", "2"))
         self._client = genai.Client(api_key=api_key)
 
         self._embedding_fallback = _LocalLLM()
@@ -401,7 +401,7 @@ class _GeminiClient:
 
 
 def selected_backend() -> str:
-    backend = os.getenv("QASA_BACKEND", "").strip().lower()
+    backend = os.getenv("PARM_BACKEND", "").strip().lower()
     aliases = {
         "google": "gemini",
         "google-genai": "gemini",
@@ -413,9 +413,9 @@ def selected_backend() -> str:
     }
     if backend:
         return aliases.get(backend, backend)
-    if _truthy(os.getenv("QASA_USE_VLLM")):
+    if _truthy(os.getenv("PARM_USE_VLLM")):
         return "vllm"
-    if _truthy(os.getenv("QASA_USE_LOCAL_MODELS")) or os.getenv("QASA_LLM_MODEL"):
+    if _truthy(os.getenv("PARM_USE_LOCAL_MODELS")) or os.getenv("PARM_LLM_MODEL"):
         return "local"
     return "gemini"
 
@@ -423,12 +423,12 @@ def selected_backend() -> str:
 def configured_generation_model(default: str = "gemini-2.5-flash") -> str:
     backend = selected_backend()
     if backend == "gemini":
-        return os.getenv("QASA_GEMINI_MODEL", default)
+        return os.getenv("PARM_GEMINI_MODEL", default)
     if backend == "qwen_api":
-        return os.getenv("QASA_QWEN_MODEL", "qwen-plus")
+        return os.getenv("PARM_QWEN_MODEL", "qwen-plus")
     if backend == "vllm":
-        return os.getenv("QASA_VLLM_MODEL", os.getenv("QASA_LLM_MODEL", default))
-    return os.getenv("QASA_LLM_MODEL", default)
+        return os.getenv("PARM_VLLM_MODEL", os.getenv("PARM_LLM_MODEL", default))
+    return os.getenv("PARM_LLM_MODEL", default)
 
 
 def _should_use_local_models() -> bool:
@@ -456,6 +456,6 @@ def create_genai_client():
         return _LOCAL_CLIENT
 
     raise ValueError(
-        f"Unsupported QASA_BACKEND={selected_backend()!r}; "
+        f"Unsupported PARM_BACKEND={selected_backend()!r}; "
         "use gemini, qwen_api, vllm, or local"
     )
