@@ -70,7 +70,32 @@ class _LocalLLM:
         self._embed_tokenizer = None
         self._embed_model = None
 
-    
+    def _load(self) -> None:
+        if self._model is not None and self._tokenizer is not None:
+            return
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        dtype_map = {
+            "bfloat16": torch.bfloat16,
+            "float16": torch.float16,
+            "float32": torch.float32,
+        }
+        torch_dtype = dtype_map.get(self.dtype.lower(), torch.bfloat16)
+
+        self._tokenizer = AutoTokenizer.from_pretrained(self.model_id, trust_remote_code=True)
+        if self._tokenizer.pad_token_id is None:
+            self._tokenizer.pad_token = self._tokenizer.eos_token
+
+        self._model = AutoModelForCausalLM.from_pretrained(
+            self.model_id,
+            trust_remote_code=True,
+            torch_dtype=torch_dtype,
+            device_map=self.device_map,
+        )
+        self._model.eval()
+
+
     def _prompt_text(self, contents: str, schema: Any | None = None) -> str:
         messages = []
         if schema is not None:
