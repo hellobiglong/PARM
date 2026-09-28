@@ -101,7 +101,7 @@ class TripleExtractor:
                         "response_mime_type": "application/json",
                         "response_schema": ExtractionResult,
                         "temperature": 0.2,
-                        "max_output_tokens": int(os.getenv("QASA_EXTRACTION_MAX_OUTPUT_TOKENS", "768")),
+                        "max_output_tokens": int(os.getenv("PARM_EXTRACTION_MAX_OUTPUT_TOKENS", "768")),
                     },
                 )
 
