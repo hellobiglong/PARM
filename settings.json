@@ -9,7 +9,7 @@
     "historical_model_provenance": "Not verified from an archived run manifest in this release.",
     "temperature": 0.2,
     "max_output_tokens": 768,
-    "max_output_tokens_environment_override": "QASA_EXTRACTION_MAX_OUTPUT_TOKENS",
+    "max_output_tokens_environment_override": "PARM_EXTRACTION_MAX_OUTPUT_TOKENS",
     "extractor_max_attempts_including_initial_call": 5,
     "initial_backoff_seconds": 2.0,
     "backoff_multiplier": 2,
@@ -39,7 +39,7 @@
     "sampling_seed": null,
     "local_huggingface_top_p_when_sampling": 0.9,
     "provider_top_p": "Not explicitly set in the current adapter.",
-    "thinking": "Extraction does not set a Gemini thinking budget. QASA_DISABLE_THINKING can disable thinking for compatible Qwen/vLLM servers."
+    "thinking": "Extraction does not set a Gemini thinking budget. PARM_DISABLE_THINKING can disable thinking for compatible Qwen/vLLM servers."
   },
   "retrieval_defaults": {
     "bm25_k1": 1.5,
@@ -67,7 +67,7 @@
     "temperature": 0.0,
     "max_output_tokens": 80,
     "parm_prompt_and_type_specific_postprocessing": "postprocessing.py:constrained_answer",
-    "qasa_answer_prompt": "postprocessing.py:ANSWER_PROMPT",
+    "PARM_answer_prompt": "postprocessing.py:ANSWER_PROMPT",
     "metrics": "Maximum normalized exact match and token F1 over all reference answers, then mean over questions.",
     "metric_implementation": "postprocessing.py:answer_f1"
   },
